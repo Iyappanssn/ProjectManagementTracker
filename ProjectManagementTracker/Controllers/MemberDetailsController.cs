@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 using ProjectManagementTracker.Models;
 
 namespace ProjectManagementTracker.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class MemberDetailsController : ControllerBase
     {
@@ -33,9 +34,9 @@ namespace ProjectManagementTracker.Controllers
 
         [HttpGet]
         [Route("memberDetails")]
-        public async Task<ActionResult<List<MemberDetails>>> Get()
+        public async Task<ActionResult<List<MemberDetails>>> Get ()
         {
-            var data = _context.MemberDetails.OrderByDescending(m => m.numberOfYearsOfExperience).ToList();
+            var data = _context.MemberDetails.OrderBy(m => m.memberID).ToList();
             return data;
         }
 
@@ -60,33 +61,19 @@ namespace ProjectManagementTracker.Controllers
         }
 
         [HttpGet]
-        [Route("taskDetails/{memberId}")]
-        public async Task<ActionResult<List<ViewTask>>> GetTask(int memberId)
+        [Route("taskDetails")]
+        public async Task<ActionResult<List<TaskDetails>>> GetTask()
         {
-            var memberData = await _context.MemberDetails.FindAsync(memberId);
-            var taskData = await _context.TaskDetails.FindAsync(memberId);
-            var taskInfo = new ViewTask();
-            taskInfo.MemberID = memberData.memberID;
-            taskInfo.MemberName = memberData.memberName;
-            taskInfo.TaskName = taskData.TaskName;
-            taskInfo.Deliverables = taskData.Deliverables;
-            taskInfo.TaskStartDate = taskData.TaskStartDate.HasValue ? taskData.TaskStartDate.Value : null;
-            taskInfo.TaskEndDate = taskData.TaskEndDate.HasValue ? taskData.TaskEndDate.Value : null;
-            taskInfo.projectStartDate = memberData.projectStartDate;
-            taskInfo.projectEndDate = memberData.projectEndDate;
-            taskInfo.allocationPercentage = memberData.allocationPercentage;
-
-            List<ViewTask> viewTask = new List<ViewTask>();
-            viewTask.Add(taskInfo);
-            return viewTask;
+            var taskData = _context.TaskDetails.ToList();
+            return taskData;
         }
 
         [HttpPost]
-        [Route("update/{allocationPercentage}")]
-        public async Task<ActionResult<MemberDetails>> Update(int memberId, int allocationPercentage)
+        [Route("update/{memberID}/{allocationPercentage}")]
+        public async Task<ActionResult<MemberDetails> > Update(int memberID, int allocationPercentage)
         {
-            var MemberData = await _context.MemberDetails.FindAsync(memberId);
-            if (memberId != MemberData.memberID)
+            var MemberData = await _context.MemberDetails.FindAsync(memberID);
+            if (memberID != MemberData.memberID)
             {
                 return BadRequest();
             }
